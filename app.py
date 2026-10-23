@@ -1,6 +1,6 @@
 import re
 import io
-from flask import Flask, request, jsonify, render_template, make_response
+from flask import Flask, request, jsonify, render_template, make_response, Response
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.cron import CronTrigger
 from datetime import datetime, timedelta, date
@@ -179,6 +179,7 @@ from utils.fx import convert_to_base, get_rate
 from utils.loan_planner import data_input
 from utils.couple_finance import CoupleFinanceManager
 from utils.portfolio_explainer import handle_risk_request
+from utils.data_exporter import FinancialDataExporter
 
 # Continue configuring the same app instance initialized above (line 64).
 # NOTE: A duplicate `app = Flask(__name__)` was previously here, which
@@ -487,6 +488,89 @@ def auto_login():
 # ============================================
 # ROUTES
 # ============================================
+
+# ---------------- SETTINGS & DATA PORTABILITY ----------------
+@app.route('/settings')
+@login_required
+def settings_page():
+    """User Settings & Data Portability Hub"""
+    return render_template('settings.html', active_page='settings')
+
+
+@app.route('/api/update-email', methods=['POST'])
+@login_required
+def update_email_settings():
+    """Update email settings preferences."""
+    try:
+        data = request.get_json() or {}
+        email = data.get('email', '').strip()
+        enabled = bool(data.get('enabled', True))
+
+        if not email:
+            return jsonify({'success': False, 'error': 'Email is required'}), 400
+
+        user_setting = UserSettings.query.filter_by(user_id=current_user.id).first()
+        if not user_setting:
+            user_setting = UserSettings(user_id=current_user.id, email=email, weekly_email_enabled=enabled)
+            db.session.add(user_setting)
+        else:
+            user_setting.email = email
+            user_setting.weekly_email_enabled = enabled
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Email settings updated successfully'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/user/export/summary', methods=['GET'])
+@login_required
+def get_export_summary():
+    """Get metadata summary of records available for export."""
+    try:
+        summary = FinancialDataExporter.get_export_summary(current_user.id)
+        return jsonify({'success': True, 'summary': summary})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/user/export/expenses.csv', methods=['GET'])
+@login_required
+def export_expenses_csv():
+    """Export user expenses as downloadable CSV file."""
+    try:
+        csv_data = FinancialDataExporter.export_expenses_csv(current_user.id)
+        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        filename = f"expenses_export_{current_user.id}_{timestamp}.csv"
+        return Response(
+            csv_data,
+            mimetype="text/csv",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/user/export/backup.json', methods=['GET'])
+@login_required
+def export_full_backup_json():
+    """Export comprehensive financial archive as downloadable JSON file."""
+    try:
+        anonymize = request.args.get('anonymize', 'false').lower() in ('true', '1', 'yes')
+        backup_dict = FinancialDataExporter.export_full_backup_json(current_user.id, anonymize=anonymize)
+        import json
+        json_str = json.dumps(backup_dict, indent=2)
+        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
+        mode = "anonymized" if anonymize else "complete"
+        filename = f"financial_backup_{mode}_{current_user.id}_{timestamp}.json"
+        return Response(
+            json_str,
+            mimetype="application/json",
+            headers={"Content-Disposition": f"attachment; filename={filename}"}
+        )
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # ---------------- RAG SYSTEM ----------------
 from utils.rag_system import RAGSystem

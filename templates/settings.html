@@ -3,37 +3,47 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Settings - AI Money Mentor</title>
+    <title>Settings & Data Portability - AI Money Mentor</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
       body {
-        font-family: Arial, sans-serif;
+        font-family: 'Segoe UI', Arial, sans-serif;
         background: #070b12;
         color: #eef0f5;
         margin: 0;
-        padding: 40px;
+        padding: 40px 20px;
       }
       .container {
-        max-width: 700px;
+        max-width: 800px;
         margin: 0 auto;
       }
       h1 {
         color: #d4a843;
-        margin-bottom: 30px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
       }
       .card {
         background: rgba(15, 22, 38, 0.96);
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 18px;
         padding: 28px;
-        margin-bottom: 20px;
+        margin-bottom: 24px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
       }
       .card h2 {
-        font-size: 18px;
-        margin-bottom: 12px;
+        font-size: 19px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
       }
-      .card p {
-        color: #5a6a82;
+      .card p.subtext {
+        color: #8b9bb4;
         margin-bottom: 20px;
+        font-size: 13.5px;
+        line-height: 1.5;
       }
       .form-group {
         margin-bottom: 16px;
@@ -41,18 +51,20 @@
       .form-group label {
         display: block;
         font-size: 12px;
-        color: #5a6a82;
+        color: #8b9bb4;
         text-transform: uppercase;
         margin-bottom: 6px;
+        letter-spacing: 0.5px;
       }
       .form-group input[type='email'] {
         width: 100%;
+        box-sizing: border-box;
         padding: 12px 16px;
         background: rgba(17, 26, 46, 0.9);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
         color: #eef0f5;
-        font-size: 13px;
+        font-size: 13.5px;
         outline: none;
       }
       .form-group input[type='email']:focus {
@@ -60,22 +72,85 @@
       }
       .form-group input[type='checkbox'] {
         accent-color: #d4a843;
-        transform: scale(1.2);
+        transform: scale(1.15);
         margin-right: 10px;
       }
       .btn-gold {
         background: linear-gradient(135deg, #f3d687 0%, #d4a843 60%);
         color: #0a0e18;
-        padding: 12px 30px;
+        padding: 10px 24px;
         border: none;
         border-radius: 999px;
         font-weight: 700;
         cursor: pointer;
         transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13.5px;
+        text-decoration: none;
       }
       .btn-gold:hover {
-        filter: brightness(1.06);
+        filter: brightness(1.08);
         transform: translateY(-2px);
+      }
+      .btn-secondary {
+        background: rgba(255, 255, 255, 0.08);
+        color: #eef0f5;
+        padding: 10px 20px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 999px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+        text-decoration: none;
+      }
+      .btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
+      }
+      .badge-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 12px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 12px;
+        color: #ccd6e0;
+      }
+      .export-options-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        margin-top: 20px;
+      }
+      .export-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        border-radius: 14px;
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+      .export-card h3 {
+        margin: 0 0 6px 0;
+        font-size: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .export-card p {
+        color: #8b9bb4;
+        font-size: 12.5px;
+        margin: 0 0 16px 0;
+        line-height: 1.4;
       }
       .success {
         background: rgba(46, 204, 138, 0.15);
@@ -93,39 +168,83 @@
         border-radius: 8px;
         margin-top: 15px;
       }
-      ul {
-        list-style: none;
-        padding: 0;
-      }
-      ul li {
-        padding: 8px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      }
-      a {
+      .back-link {
         color: #d4a843;
         text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 10px;
+        font-weight: 600;
       }
-      .back-link {
-        display: inline-block;
-        margin-top: 20px;
+      .back-link:hover {
+        text-decoration: underline;
       }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1><i class="fa-solid fa-gear"></i> Settings</h1>
+      <h1><i class="fa-solid fa-sliders"></i> Settings & Preferences</h1>
 
+      <!-- Data Portability & Backup Hub -->
       <div class="card">
-        <h2><i class="fa-solid fa-envelope"></i> Weekly Email Digest</h2>
-        <p>Get a weekly financial summary every Monday at 9:00 AM.</p>
+        <h2>
+          <i class="fa-solid fa-cloud-arrow-down" style="color: #2ec4b6;"></i>
+          Data Portability & Financial Backups
+        </h2>
+        <p class="subtext">
+          Export your complete financial records at any time. Take full custody of your transactions, budgets, assets, and goals in standard CSV and JSON formats.
+        </p>
+
+        <div id="exportSummaryBadges" style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px;">
+          <span class="badge-pill"><i class="fa-solid fa-spinner fa-spin"></i> Loading record counts...</span>
+        </div>
+
+        <div class="export-options-grid">
+          <div class="export-card">
+            <div>
+              <h3><i class="fa-solid fa-file-csv" style="color: #2ec4b6;"></i> Expenses (CSV)</h3>
+              <p>RFC-4180 standard spreadsheet format for Excel, Google Sheets, or tax filing.</p>
+            </div>
+            <a href="/api/user/export/expenses.csv" class="btn-gold" download>
+              <i class="fa-solid fa-download"></i> Export CSV
+            </a>
+          </div>
+
+          <div class="export-card">
+            <div>
+              <h3><i class="fa-solid fa-file-code" style="color: #d4a843;"></i> Full Archive (JSON)</h3>
+              <p>Complete hierarchical backup of expenses, budgets, assets, liabilities, and goals.</p>
+            </div>
+            <a href="/api/user/export/backup.json" class="btn-gold" download>
+              <i class="fa-solid fa-box-archive"></i> Export Archive
+            </a>
+          </div>
+
+          <div class="export-card">
+            <div>
+              <h3><i class="fa-solid fa-user-secret" style="color: #48cae4;"></i> Anonymized (JSON)</h3>
+              <p>Sanitized copy with redacted merchant names and descriptions for advisor sharing.</p>
+            </div>
+            <a href="/api/user/export/backup.json?anonymize=true" class="btn-secondary" download>
+              <i class="fa-solid fa-shield-halved"></i> Export Sanitized
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly Email Digest -->
+      <div class="card">
+        <h2><i class="fa-solid fa-envelope" style="color: #d4a843;"></i> Weekly Email Digest</h2>
+        <p class="subtext">Receive automated weekly spending highlights and AI financial insights delivered to your inbox every Monday morning.</p>
 
         <form id="emailSettingsForm">
           <div class="form-group">
-            <label for="emailInput">Email Address</label>
+            <label for="emailInput">Notification Email Address</label>
             <input
               type="email"
               id="emailInput"
-              placeholder="Enter your email"
+              placeholder="e.g. name@example.com"
               required
             />
           </div>
@@ -133,41 +252,48 @@
           <div class="form-group">
             <label>
               <input type="checkbox" id="emailEnabled" checked />
-              Enable Weekly Email Reports
+              Enable Weekly Email Digest
             </label>
           </div>
 
-          <button type="submit" class="btn-gold">Save Settings</button>
+          <button type="submit" class="btn-gold">
+            <i class="fa-solid fa-floppy-disk"></i> Save Email Preferences
+          </button>
         </form>
 
         <div id="message"></div>
       </div>
 
-      <div class="card">
-        <h2>
-          <i class="fa-solid fa-file-lines"></i> What's Included in Your Weekly
-          Report?
-        </h2>
-        <ul>
-          <li>
-            <i class="fa-solid fa-calculator"></i> Total spending vs previous
-            week
-          </li>
-          <li><i class="fa-solid fa-gem"></i>Net worth change</li>
-          <li><i class="fa-solid fa-wallet"></i>Budget health alerts</li>
-          <li>
-            <i class="fa-solid fa-ranking-star"></i>Top 3 spending categories
-          </li>
-          <li>
-            <i class="fa-solid fa-lightbulb"></i> AI-powered financial insight
-          </li>
-        </ul>
-      </div>
-
-      <a href="/dashboard" class="back-link">← Back to Dashboard</a>
+      <a href="/" class="back-link"><i class="fa-solid fa-arrow-left"></i> Return to Main Application</a>
     </div>
 
     <script>
+      // Load record summary badges
+      async function loadExportSummary() {
+        const badgeContainer = document.getElementById('exportSummaryBadges');
+        try {
+          const res = await fetch('/api/user/export/summary');
+          const data = await res.json();
+          if (data.success && data.summary) {
+            const counts = data.summary.counts;
+            badgeContainer.innerHTML = `
+              <span class="badge-pill"><i class="fa-solid fa-receipt"></i> ${counts.expenses} Expenses</span>
+              <span class="badge-pill"><i class="fa-solid fa-wallet"></i> ${counts.budgets} Budgets</span>
+              <span class="badge-pill"><i class="fa-solid fa-gem"></i> ${counts.assets} Assets</span>
+              <span class="badge-pill"><i class="fa-solid fa-hand-holding-dollar"></i> ${counts.liabilities} Liabilities</span>
+              <span class="badge-pill"><i class="fa-solid fa-bullseye"></i> ${counts.financial_goals} Goals</span>
+              <span class="badge-pill"><i class="fa-solid fa-repeat"></i> ${counts.recurring_subscriptions} Subscriptions</span>
+            `;
+          } else {
+            badgeContainer.innerHTML = `<span class="badge-pill">Ready for export</span>`;
+          }
+        } catch (err) {
+          badgeContainer.innerHTML = `<span class="badge-pill">Ready for export</span>`;
+        }
+      }
+
+      document.addEventListener('DOMContentLoaded', loadExportSummary);
+
       document
         .getElementById('emailSettingsForm')
         .addEventListener('submit', async function (e) {
@@ -194,10 +320,10 @@
 
             if (data.success) {
               messageDiv.className = 'success';
-              messageDiv.textContent = '✅ Settings updated successfully!';
+              messageDiv.textContent = '✅ Email preferences updated successfully!';
             } else {
               messageDiv.className = 'error';
-              messageDiv.textContent = '❌ ' + data.error;
+              messageDiv.textContent = '❌ ' + (data.error || 'Failed to update preferences.');
             }
           } catch (error) {
             messageDiv.className = 'error';
