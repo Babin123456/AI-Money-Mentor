@@ -176,7 +176,7 @@ from utils.validation import ValidationError, validate_string, validate_float, v
 from utils.safety_engine import SafetyEngine
 from utils.rag_system import RAGSystem
 from utils.fx import convert_to_base, get_rate
-from utils.loan_planner import data_input
+from utils.loan_planner import data_input, LoanAmortizationOptimizer
 from utils.couple_finance import CoupleFinanceManager
 from utils.portfolio_explainer import handle_risk_request
 
@@ -719,6 +719,14 @@ def loan():
 
     
 #-----Information Retrieval for Loan_Planner--------
+@app.route("/loan_planner")
+@app.route("/loan-planner")
+@login_required
+def loan_planner_page():
+    """Loan Planner & Debt Payoff Optimizer Page"""
+    return render_template("loan_planner.html", active_page="loan")
+
+
 @app.route("/loan_info", methods=["GET","POST"])
 @login_required
 def get_details():
@@ -733,7 +741,57 @@ def get_details():
         return jsonify(result)
     except Exception as e:
         return jsonify({"error": str(e)}), 400
-    print("Working")
+
+
+@app.route("/api/loan/prepayment-simulate", methods=["POST"])
+@login_required
+def simulate_loan_prepayment():
+    """Simulate single loan prepayment acceleration and interest savings."""
+    try:
+        data = request.get_json() or {}
+        principal = float(data.get("principal", 0))
+        rate = float(data.get("rate", 0))
+        tenure_years = float(data.get("time", 0))
+        extra_monthly = float(data.get("extra_monthly", 0))
+        lump_sum = float(data.get("lump_sum", 0))
+        lump_sum_month = int(data.get("lump_sum_month", 1))
+
+        if principal <= 0 or tenure_years <= 0:
+            return jsonify({"error": "Principal and tenure must be positive"}), 400
+
+        simulation = LoanAmortizationOptimizer.calculate_prepayment_impact(
+            principal=principal,
+            annual_rate=rate,
+            tenure_years=tenure_years,
+            extra_monthly=extra_monthly,
+            lump_sum=lump_sum,
+            lump_sum_month=lump_sum_month
+        )
+        return jsonify(simulation)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+
+@app.route("/api/loan/debt-payoff-compare", methods=["POST"])
+@login_required
+def compare_debt_payoff_strategies():
+    """Compare Debt Avalanche vs. Debt Snowball payoff strategies."""
+    try:
+        data = request.get_json() or {}
+        debts = data.get("debts", [])
+        extra_monthly = float(data.get("extra_monthly_budget", 0))
+
+        if not debts or not isinstance(debts, list):
+            return jsonify({"error": "Debts list is required"}), 400
+
+        comparison = LoanAmortizationOptimizer.compare_payoff_strategies(
+            debts=debts,
+            extra_monthly_budget=extra_monthly
+        )
+        return jsonify(comparison)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
 
 # ---------------- RETIREMENT ----------------
 @app.route('/retirement')

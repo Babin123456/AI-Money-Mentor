@@ -704,3 +704,143 @@ label {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* --- Loan Planner & Debt Payoff Optimizer --- */
+.optimizer-section {
+  width: 100%;
+}
+.section-header-box {
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 4px solid var(--gold);
+  padding: 14px 18px;
+  border-radius: 8px;
+}
+.section-header-title {
+  font-size: 17px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-header-sub {
+  margin: 6px 0 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.prepay-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
+.prepay-stat-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+}
+.prepay-stat-card.highlight-card {
+  border-color: rgba(46, 196, 182, 0.4);
+  background: rgba(46, 196, 182, 0.05);
+}
+.stat-title {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+.stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  margin: 6px 0;
+}
+.stat-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+.text-green { color: #2ec4b6 !important; }
+.text-gold { color: var(--gold) !important; }
+.text-cyan { color: #48cae4 !important; }
+.custom-badge {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 11px;
+  display: inline-block;
+}
+.badge-safe { background: rgba(46, 196, 182, 0.15); color: #2ec4b6; }
+.badge-moderate { background: rgba(255, 183, 3, 0.15); color: #ffb703; }
+.badge-danger { background: rgba(230, 57, 70, 0.15); color: #e63946; }
+.badge-rate { background: rgba(212, 175, 55, 0.15); color: var(--gold); }
+.debt-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+.debt-table th, .debt-table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.debt-table th {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+.strategy-comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+.strategy-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 18px;
+  position: relative;
+}
+.strategy-card.avalanche-card {
+  border-color: rgba(46, 196, 182, 0.3);
+}
+.strategy-card.snowball-card {
+  border-color: rgba(212, 175, 55, 0.3);
+}
+.card-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+.badge-avalanche { background: rgba(46, 196, 182, 0.2); color: #2ec4b6; }
+.badge-snowball { background: rgba(212, 175, 55, 0.2); color: var(--gold); }
+.strategy-title {
+  font-size: 18px;
+  font-weight: 700;
+}
+.strategy-desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin: 6px 0 14px 0;
+}
+.strategy-metric {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  font-size: 13.5px;
+}
+.strategy-recommendation-box {
+  margin-top: 16px;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
