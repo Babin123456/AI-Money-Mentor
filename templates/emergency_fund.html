@@ -1,0 +1,294 @@
+{% extends 'base.html' %}
+{% block title %}Emergency Fund & Runway Simulator — AI Money Mentor{% endblock %}
+
+{% block head %}
+<style>
+  .runway-gauge-container {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    backdrop-filter: blur(12px);
+  }
+  .runway-number {
+    font-size: 48px;
+    font-weight: 800;
+    font-family: 'Syne', sans-serif;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .runway-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .badge-tier-success {
+    background: rgba(46, 204, 138, 0.15);
+    color: #2ecc8a;
+    border: 1px solid rgba(46, 204, 138, 0.3);
+  }
+  .badge-tier-warning {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+  .badge-tier-danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+  .scenario-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 14px;
+    padding: 18px;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+  .scenario-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--gold2);
+  }
+  .progress-runway {
+    height: 10px;
+    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+    margin: 12px 0;
+  }
+  .progress-runway-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold2));
+    border-radius: 5px;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page center-page active" style="max-width: 1100px; margin: 0 auto; padding: 20px;">
+  <div class="page-title">
+    <i class="fa-solid fa-shield-heart" style="color: var(--gold);"></i> Emergency Fund & <span>Runway Simulator</span>
+  </div>
+  <p class="text-muted" style="margin-top: -10px; margin-bottom: 25px;">
+    Stress-test your personal finances, calculate survival runway, and build an airtight emergency safety net.
+  </p>
+
+  <!-- Top Status Summary -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="label">Financial Runway</div>
+        <div id="statRunway" class="runway-number">0.0</div>
+        <small class="text-muted">Months of Survival</small>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="label">Recommended Target</div>
+        <div id="statTargetAmount" class="stat-value text-gold" style="font-size: 26px; font-weight: 700; margin-top: 10px;">₹0</div>
+        <small id="statTargetMonths" class="text-muted">6 Months Reserve</small>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="label">Funding Gap</div>
+        <div id="statFundingGap" class="stat-value text-danger" style="font-size: 26px; font-weight: 700; margin-top: 10px;">₹0</div>
+        <small id="statTimeToGoal" class="text-muted">-- to fully funded</small>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="stat-card">
+        <div class="label">Safety Net Tier</div>
+        <div style="margin-top: 14px;">
+          <span id="statTierBadge" class="runway-badge badge-tier-warning">Calculating...</span>
+        </div>
+        <small id="statFundedPct" class="text-muted" style="display: block; margin-top: 8px;">0% Funded</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left Column: Inputs & Customization -->
+    <div class="col-lg-6">
+      <div class="card">
+        <h4 style="font-family: 'Syne', sans-serif; color: var(--gold); margin-bottom: 16px;">
+          <i class="fa-solid fa-sliders"></i> Your Parameters
+        </h4>
+
+        <div class="mb-3">
+          <label class="form-label text-muted small text-uppercase">Monthly Essential Expenses (₹)</label>
+          <input type="number" id="inputMonthlyExpenses" class="form-control" value="50000" min="1000" step="1000" />
+          <small class="text-muted">Rent, EMI, groceries, utilities, basic insurance.</small>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label text-muted small text-uppercase">Current Liquid Savings (₹)</label>
+          <input type="number" id="inputCurrentSavings" class="form-control" value="150000" min="0" step="5000" />
+          <small class="text-muted">Readily accessible bank balances, sweep FDs, liquid mutual funds.</small>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label text-muted small text-uppercase">Income Stability</label>
+            <select id="selectStability" class="form-select">
+              <option value="stable">Dual Salaried (Stable)</option>
+              <option value="moderate" selected>Single Salaried (Moderate)</option>
+              <option value="variable">Freelance / Business (Variable)</option>
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="form-label text-muted small text-uppercase">Dependents</label>
+            <select id="selectDependents" class="form-select">
+              <option value="0" selected>0 Dependents</option>
+              <option value="1">1 Dependent</option>
+              <option value="2">2 Dependents</option>
+              <option value="3">3+ Dependents</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label text-muted small text-uppercase">Monthly Savings Contribution (₹)</label>
+          <input type="number" id="inputContribution" class="form-control" value="15000" min="0" step="1000" />
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+          <button class="btn btn-gold flex-grow-1" onclick="calculateEmergencyFund()">
+            <i class="fa-solid fa-calculator"></i> Simulate Runway
+          </button>
+          <button class="btn btn-outline-secondary" onclick="saveEmergencyPlan()">
+            <i class="fa-solid fa-floppy-disk"></i> Save Plan
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: Emergency Scenarios -->
+    <div class="col-lg-6">
+      <div class="card">
+        <h4 style="font-family: 'Syne', sans-serif; color: var(--gold); margin-bottom: 16px;">
+          <i class="fa-solid fa-bolt"></i> Emergency Stress Tests
+        </h4>
+
+        <div class="d-flex flex-column gap-3">
+          <div class="scenario-card">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <strong style="color: #f87171;"><i class="fa-solid fa-user-xmark"></i> Total Job Loss</strong>
+              <span id="scenarioJobLossRunway" class="badge bg-danger">--</span>
+            </div>
+            <p id="scenarioJobLossDesc" class="text-muted small mb-0">Calculates exact survival duration with zero income.</p>
+          </div>
+
+          <div class="scenario-card">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <strong style="color: #fbbf24;"><i class="fa-solid fa-hospital"></i> Medical Emergency Shock</strong>
+              <span id="scenarioMedicalRunway" class="badge bg-warning text-dark">--</span>
+            </div>
+            <p id="scenarioMedicalDesc" class="text-muted small mb-0">Simulates unexpected immediate hospital or repair expense.</p>
+          </div>
+
+          <div class="scenario-card">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <strong style="color: #34d399;"><i class="fa-solid fa-shield"></i> Austerity Mode (30% Cut)</strong>
+              <span id="scenarioAusterityRunway" class="badge bg-success">--</span>
+            </div>
+            <p id="scenarioAusterityDesc" class="text-muted small mb-0">Extends runway by cutting non-essential discretionary burn.</p>
+          </div>
+        </div>
+
+        <div class="mt-4 p-3" style="background: rgba(255, 255, 255, 0.02); border-radius: 12px;">
+          <small class="text-muted" id="tierAdviceText">
+            💡 Rule of Thumb: Keep emergency funds in separate high-liquidity accounts away from daily spending accounts.
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function calculateEmergencyFund() {
+  const payload = {
+    monthly_expenses: parseFloat(document.getElementById('inputMonthlyExpenses').value) || 0,
+    current_savings: parseFloat(document.getElementById('inputCurrentSavings').value) || 0,
+    income_stability: document.getElementById('selectStability').value,
+    dependents: parseInt(document.getElementById('selectDependents').value) || 0,
+    monthly_contribution: parseFloat(document.getElementById('inputContribution').value) || 0
+  };
+
+  fetch('/api/emergency-fund/calculate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      renderResults(data.evaluation, data.scenarios);
+    } else {
+      alert('Error calculating: ' + (data.error || 'Unknown error'));
+    }
+  })
+  .catch(err => console.error('Calculation error:', err));
+}
+
+function renderResults(ev, sc) {
+  document.getElementById('statRunway').textContent = ev.runway_months.toFixed(1);
+  document.getElementById('statTargetAmount').textContent = '₹' + ev.target_amount.toLocaleString('en-IN');
+  document.getElementById('statTargetMonths').textContent = ev.target_months + ' Months Reserve';
+  document.getElementById('statFundingGap').textContent = '₹' + ev.funding_gap.toLocaleString('en-IN');
+  document.getElementById('statFundedPct').textContent = ev.funded_percentage + '% Funded';
+
+  const badge = document.getElementById('statTierBadge');
+  badge.textContent = ev.tier;
+  badge.className = 'runway-badge badge-tier-' + ev.status_color;
+
+  const timeLabel = ev.months_to_goal ? (ev.months_to_goal + ' mos to full fund') : (ev.funding_gap === 0 ? 'Fully funded! 🎉' : 'No contribution set');
+  document.getElementById('statTimeToGoal').textContent = timeLabel;
+  document.getElementById('tierAdviceText').textContent = '💡 ' + ev.summary_message;
+
+  if (sc) {
+    document.getElementById('scenarioJobLossRunway').textContent = sc.job_loss.runway_months + ' Mos';
+    document.getElementById('scenarioJobLossDesc').textContent = sc.job_loss.description;
+
+    document.getElementById('scenarioMedicalRunway').textContent = sc.medical_shock.runway_after_shock_months + ' Mos left';
+    document.getElementById('scenarioMedicalDesc').textContent = sc.medical_shock.description;
+
+    document.getElementById('scenarioAusterityRunway').textContent = '+' + sc.austerity_mode.extra_months_gained + ' Mos gained';
+    document.getElementById('scenarioAusterityDesc').textContent = sc.austerity_mode.description;
+  }
+}
+
+function saveEmergencyPlan() {
+  const payload = {
+    monthly_expenses: parseFloat(document.getElementById('inputMonthlyExpenses').value) || 0,
+    current_savings: parseFloat(document.getElementById('inputCurrentSavings').value) || 0,
+    income_stability: document.getElementById('selectStability').value,
+    dependents: parseInt(document.getElementById('selectDependents').value) || 0,
+    monthly_contribution: parseFloat(document.getElementById('inputContribution').value) || 0
+  };
+
+  fetch('/api/emergency-fund/save', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      alert('✅ Emergency Fund Plan saved successfully!');
+    } else {
+      alert('Error saving plan: ' + (data.error || 'Unknown error'));
+    }
+  });
+}
+
+// Initial calculation on load
+document.addEventListener('DOMContentLoaded', calculateEmergencyFund);
+</script>
+{% endblock %}

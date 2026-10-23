@@ -741,6 +741,73 @@ def retirement():
     """Retirement & Inflation Simulator Page"""
     return render_template('retirement.html')
 
+# ---------------- EMERGENCY FUND & RUNWAY SIMULATOR ----------------
+@app.route('/emergency-fund')
+def emergency_fund_page():
+    """Emergency Fund & Runway Simulator Page"""
+    return render_template('emergency_fund.html', active_page='emergency_fund')
+
+@app.route('/api/emergency-fund/calculate', methods=['POST'])
+def api_calculate_emergency_fund():
+    try:
+        data = request.get_json() or {}
+        monthly_expenses = float(data.get('monthly_expenses', 0.0))
+        current_savings = float(data.get('current_savings', 0.0))
+        income_stability = str(data.get('income_stability', 'moderate'))
+        dependents = int(data.get('dependents', 0))
+        monthly_contribution = float(data.get('monthly_contribution', 0.0))
+        custom_target_months = data.get('custom_target_months')
+        if custom_target_months:
+            custom_target_months = int(custom_target_months)
+
+        from utils.emergency_fund import EmergencyFundCalculator
+        evaluation = EmergencyFundCalculator.evaluate_emergency_fund(
+            monthly_expenses=monthly_expenses,
+            current_savings=current_savings,
+            income_stability=income_stability,
+            dependents=dependents,
+            monthly_contribution=monthly_contribution,
+            custom_target_months=custom_target_months
+        )
+        scenarios = EmergencyFundCalculator.simulate_scenarios(
+            monthly_expenses=monthly_expenses,
+            current_savings=current_savings
+        )
+        return jsonify({
+            'success': True,
+            'evaluation': evaluation,
+            'scenarios': scenarios
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+@app.route('/api/emergency-fund/save', methods=['POST'])
+def api_save_emergency_fund():
+    try:
+        user_id = current_user.id if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated else 1
+        data = request.get_json() or {}
+        from models import EmergencyFundPlan
+        plan = EmergencyFundPlan.query.filter_by(user_id=user_id).first()
+        if not plan:
+            plan = EmergencyFundPlan(user_id=user_id)
+            db.session.add(plan)
+
+        plan.monthly_expenses = float(data.get('monthly_expenses', 0.0))
+        plan.current_savings = float(data.get('current_savings', 0.0))
+        plan.target_months = int(data.get('target_months', 6))
+        plan.target_amount = float(data.get('target_amount', plan.monthly_expenses * plan.target_months))
+        plan.income_stability = str(data.get('income_stability', 'moderate'))
+        plan.dependents = int(data.get('dependents', 0))
+        plan.monthly_contribution = float(data.get('monthly_contribution', 0.0))
+        plan.notes = data.get('notes', '')
+
+        db.session.commit()
+        return jsonify({'success': True, 'plan': plan.to_dict()})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
 # ---------------- PORTFOLIO OPTIMIZER ----------------
 @app.route('/portfolio-optimizer')
 @login_required

@@ -704,3 +704,40 @@ label {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* Emergency Fund & Runway Simulator */
+.runway-number {
+  font-size: 42px;
+  font-weight: 800;
+  font-family: 'Syne', sans-serif;
+  color: var(--gold);
+}
+
+.runway-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.badge-tier-success {
+  background: rgba(46, 204, 138, 0.15);
+  color: #2ecc8a;
+  border: 1px solid rgba(46, 204, 138, 0.3);
+}
+
+.badge-tier-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #f59e0b;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badge-tier-danger {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+

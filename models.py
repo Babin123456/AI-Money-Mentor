@@ -1726,3 +1726,37 @@ class UserSettings(db.Model):
     email = db.Column(db.String(120), unique=True, nullable=False)
     weekly_email_enabled = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class EmergencyFundPlan(db.Model):
+    __tablename__ = 'emergency_fund_plans'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), index=True, nullable=False)
+    monthly_expenses = db.Column(db.Float, nullable=False, default=0.0)
+    current_savings = db.Column(db.Float, nullable=False, default=0.0)
+    target_months = db.Column(db.Integer, nullable=False, default=6)
+    target_amount = db.Column(db.Float, nullable=False, default=0.0)
+    income_stability = db.Column(db.String(50), default='moderate')
+    dependents = db.Column(db.Integer, default=0)
+    monthly_contribution = db.Column(db.Float, default=0.0)
+    notes = db.Column(db.String(255), nullable=True)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = db.relationship('User', backref=db.backref('emergency_fund_plan', uselist=False))
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'monthly_expenses': self.monthly_expenses,
+            'current_savings': self.current_savings,
+            'target_months': self.target_months,
+            'target_amount': self.target_amount,
+            'income_stability': self.income_stability,
+            'dependents': self.dependents,
+            'monthly_contribution': self.monthly_contribution,
+            'notes': self.notes,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
+
