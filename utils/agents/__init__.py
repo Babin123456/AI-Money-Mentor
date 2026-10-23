@@ -1,5 +1,5 @@
 """
-Agents Package - Multi-Agent System
+Agents Package - Multi-Agent Financial Advisory System
 """
 
 from utils.agents.base_agent import BaseAgent
@@ -8,3 +8,12 @@ from utils.agents.investment_agent import InvestmentAgent
 from utils.agents.debt_agent import DebtAgent
 from utils.agents.insurance_agent import InsuranceAgent
 from utils.agents.portfolio_agent import PortfolioAgent
+
+__all__ = [
+    "BaseAgent",
+    "TaxAgent",
+    "InvestmentAgent",
+    "DebtAgent",
+    "InsuranceAgent",
+    "PortfolioAgent",
+]

@@ -114,21 +114,36 @@ class SafetyEngine:
     
     def check_hallucination(self, response: str, context: Dict) -> Tuple[bool, str]:
         """Detect if AI invented numbers or facts not in context"""
-        # Extract all numbers from response
-        numbers = re.findall(r'₹?[\d,]+\.?\d*', response)
+        # Extract currency or large numeric figures from response
+        matches = re.findall(r'₹\s*(\d+(?:,\d+)*(?:\.\d+)?)|\b(\d{4,}(?:,\d+)*(?:\.\d+)?)\b', response)
+        
+        numbers = []
+        for match in matches:
+            val = match[0] or match[1]
+            if val:
+                numbers.append(val)
         
         if not numbers:
-            return True, "No numbers found to verify"
+            return True, "✅ No financial figures requiring context verification"
         
         invented = []
         for num_str in numbers:
-            clean_num = float(re.sub(r'[₹,]', '', num_str))
+            clean_str = num_str.replace(',', '').strip()
+            try:
+                clean_num = float(clean_str)
+            except ValueError:
+                continue
+            
+            # Skip calendar years (e.g. 2024-2035)
+            if 1990 <= clean_num <= 2050:
+                continue
+                
             # Check if number appears in context
             if not self._number_in_context(clean_num, context):
                 invented.append(num_str)
         
         if invented:
-            return False, f"⚠️ Hallucination detected: Invented numbers {invented}"
+            return False, f"⚠️ Potential unverified figure detected: {invented}"
         
         return True, "✅ All numbers verified against context"
     
@@ -138,17 +153,14 @@ class SafetyEngine:
             return False
         
         # Check against known user data
-        known_fields = ['income', 'expenses', 'savings', 'investments', 'debt', 'emergency']
+        known_fields = ['income', 'expenses', 'savings', 'investments', 'debt', 'emergency', 'target_amount']
         
         for field in known_fields:
-            if field in context and context[field]:
-                # Check if number is within 10% of known value
-                if abs(number - context[field]) / max(context[field], 1) < 0.1:
+            val = context.get(field)
+            if val is not None and isinstance(val, (int, float)) and val > 0:
+                # Check if number is within 10% of known value or matches
+                if abs(number - val) / val < 0.1:
                     return True
-        
-        # Check if it's a percentage (0-100)
-        if 0 <= number <= 100 and '%' in str(number):
-            return True
         
         return False
     
@@ -276,25 +288,23 @@ class SafetyEngine:
     
     def generate_safe_response(self, violations: List[str], warnings: List[str]) -> str:
         """Generate a safe fallback response when violations are detected"""
-        violation_text = '\n'.join([f"• {v}" for v in violations])
-        warning_text = '\n'.join([f"• {w}" for w in warnings])
+        violation_lines = [f"• {v}" for v in violations] if violations else ["• Potential compliance discrepancy"]
+        violation_text = "\n".join(violation_lines)
         
-        return f"""
-⚠️ **Safety Check: AI Response Modified**
-
-The AI generated a response that didn't pass our safety checks.
-
-**Issues detected:**
-{violation_text}
-
-{f'**Warnings:**\n{warning_text}' if warnings else ''}
-
-**Safe Response:**
-I want to ensure I provide accurate financial guidance. 
-Could you please share more details about your specific financial situation?
-
-*Disclaimer: This is AI-generated financial guidance. Please consult a certified financial advisor before making important financial decisions.*
-"""
+        warning_section = ""
+        if warnings:
+            warning_text = "\n".join([f"• {w}" for w in warnings])
+            warning_section = f"\n\n**Warnings:**\n{warning_text}"
+        
+        return (
+            "⚠️ **Safety Check: AI Response Modified**\n\n"
+            "The AI generated a response that didn't pass our safety checks.\n\n"
+            f"**Issues detected:**\n{violation_text}{warning_section}\n\n"
+            "**Safe Response:**\n"
+            "I want to ensure I provide accurate financial guidance. "
+            "Could you please share more details about your specific financial situation?\n\n"
+            "*Disclaimer: This is AI-generated financial guidance. Please consult a certified financial advisor before making important financial decisions.*"
+        )
     
     def get_safety_report(self, response: str, context: Dict = None) -> Dict:
         """Generate detailed safety report for logging/auditing"""
