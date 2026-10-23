@@ -2858,12 +2858,12 @@ def recurring_page():
 
 @app.route('/subscriptions')
 def subscriptions_page():
-    return render_template('subscriptions.html')
+    return render_template('recurring.html')
 
 # API: List subscriptions
 @app.route('/api/subscriptions', methods=['GET'])
 def list_subscriptions():
-    user_id = 1  # placeholder for current user auth
+    user_id = current_user.id if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated else 1
     subs = CoupleSubscription.query.filter(
         (CoupleSubscription.user_id == user_id) | (CoupleSubscription.partner_user_id == user_id)
     ).all()
@@ -2872,13 +2872,14 @@ def list_subscriptions():
 # API: Add subscription (manual)
 @app.route('/api/subscriptions/add', methods=['POST'])
 def add_subscription():
-    data = request.json
+    data = request.json or {}
     required = ['title', 'amount', 'frequency', 'next_due_date', 'partner_user_id']
     for field in required:
         if field not in data:
             return jsonify({'success': False, 'error': f'Missing field: {field}'}), 400
+    user_id = current_user.id if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated else 1
     sub = CoupleSubscription(
-        user_id=1,  # placeholder current user
+        user_id=user_id,
         partner_user_id=data['partner_user_id'],
         title=data['title'],
         amount=data['amount'],
@@ -2893,7 +2894,7 @@ def add_subscription():
 # API: Update subscription
 @app.route('/api/subscriptions/update', methods=['POST'])
 def update_subscription():
-    data = request.json
+    data = request.json or {}
     sub_id = data.get('id')
     if not sub_id:
         return jsonify({'success': False, 'error': 'Missing subscription id'}), 400
@@ -2909,7 +2910,7 @@ def update_subscription():
 # API: Cancel subscription (set status)
 @app.route('/api/subscriptions/cancel', methods=['POST'])
 def cancel_subscription():
-    data = request.json
+    data = request.json or {}
     sub_id = data.get('id')
     sub = CoupleSubscription.query.get(sub_id)
     if not sub:
@@ -2918,54 +2919,31 @@ def cancel_subscription():
     db.session.commit()
     return jsonify({'success': True, 'message': 'Subscription canceled'})
 
+@app.route('/api/subscriptions/update-status', methods=['POST'])
+def update_subscription_status_route():
+    try:
+        data = request.get_json() or {}
+        sub_id = data.get('id')
+        status = data.get('status', 'active')
+        if not sub_id:
+            return jsonify({'success': False, 'error': 'Missing subscription id'}), 400
+        user_id = current_user.id if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated else 1
+        from utils.subscription_detector import update_subscription_status
+        result = update_subscription_status(subscription_id=int(sub_id), user_id=user_id, status=status)
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/api/recurring/detect', methods=['GET'])
+
+@app.route('/api/recurring/detect', methods=['GET', 'POST'])
 def detect_recurring_expenses():
     try:
-        cutoff_date = date.today() - timedelta(days=60)
-        expenses = Expense.query.filter(Expense.date >= cutoff_date).order_by(Expense.date.desc()).all()
-        if not expenses:
-            return jsonify({'success': True, 'detected': [], 'message': 'No expenses found in last 60 days'})
-        patterns = {}
-        for exp in expenses:
-            key = f"{exp.merchant or 'Unknown'}_{exp.category}"
-            if key not in patterns:
-                patterns[key] = {'merchant': exp.merchant or 'Unknown', 'category': exp.category, 'amounts': [], 'dates': []}
-            patterns[key]['amounts'].append(exp.amount)
-            patterns[key]['dates'].append(exp.date)
-        detected = []
-        for key, data in patterns.items():
-            if len(data['amounts']) >= 2:
-                avg_amount = sum(data['amounts']) / len(data['amounts'])
-                variation = max([abs(a - avg_amount) / avg_amount for a in data['amounts']])
-                if variation <= 0.10:
-                    sorted_dates = sorted(data['dates'])
-                    if len(sorted_dates) >= 2:
-                        day_diffs = []
-                        for i in range(1, len(sorted_dates)):
-                            diff = (sorted_dates[i] - sorted_dates[i-1]).days
-                            day_diffs.append(diff)
-                        avg_diff = sum(day_diffs) / len(day_diffs)
-                        frequency = None
-                        if 28 <= avg_diff <= 31:
-                            frequency = 'monthly'
-                        elif 7 <= avg_diff <= 8:
-                            frequency = 'weekly'
-                        elif 85 <= avg_diff <= 95:
-                            frequency = 'quarterly'
-                        elif 355 <= avg_diff <= 370:
-                            frequency = 'yearly'
-                        if frequency:
-                            detected.append({
-                                'merchant': data['merchant'],
-                                'category': data['category'],
-                                'amount': round(avg_amount, 2),
-                                'frequency': frequency,
-                                'next_due': (sorted_dates[-1] + timedelta(days=round(avg_diff))).isoformat(),
-                                'confidence': 'high' if len(data['amounts']) >= 3 else 'medium'
-                            })
-        return jsonify({'success': True, 'detected': detected, 'count': len(detected)})
+        user_id = current_user.id if hasattr(current_user, 'is_authenticated') and current_user.is_authenticated else 1
+        from utils.subscription_detector import run_detection
+        result = run_detection(user_id=user_id)
+        return jsonify(result)
     except Exception as e:
+        logger.error(f"Error in detect_recurring_expenses: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/api/recurring/add', methods=['POST'])

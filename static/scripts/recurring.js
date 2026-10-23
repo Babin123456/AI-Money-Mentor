@@ -182,16 +182,20 @@ function detectRecurring() {
         data.detected.forEach((p) => {
           const confidenceColor =
             p.confidence === 'high' ? 'success' : 'warning';
+          const surgeBadge = p.price_change && p.price_change.is_surge
+            ? `<span class="badge bg-danger ms-1">🚨 Price Surge: +${p.price_change.percent_change}% (₹${p.price_change.previous_amount} → ₹${p.price_change.latest_amount})</span>`
+            : '';
           html += `
                         <div class="detected-item" style="background: rgba(46, 204, 138, 0.1); border-left: 4px solid #2ecc8a; padding: 12px; margin-bottom: 8px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
                             <div class="info">
-                                <strong>${p.merchant}</strong>
-                                <span class="badge bg-secondary">${p.category}</span>
+                                <strong>${esc(p.merchant)}</strong>
+                                <span class="badge bg-secondary">${esc(p.category)}</span>
                                 <span class="badge bg-${confidenceColor}">${p.confidence} confidence</span>
+                                ${surgeBadge}
                                 <br>
                                 <small>₹${formatNumber(p.amount)} • ${p.frequency} • Next: ${formatDate(p.next_due)}</small>
                             </div>
-                            <button class="btn btn-sm btn-primary" onclick="addDetectedPattern('${p.merchant}', '${p.category}', ${p.amount}, '${p.frequency}', '${p.next_due}')">
+                            <button class="btn btn-sm btn-primary" onclick="addDetectedPattern('${esc(p.merchant)}', '${esc(p.category)}', ${p.amount}, '${p.frequency}', '${p.next_due}')">
                                 ✅ Add
                             </button>
                         </div>
